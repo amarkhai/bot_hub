@@ -12,10 +12,10 @@ services:
     ports:
       - "${DB_EXTERNAL_PORT}:5432"
 
-  elasticsearch:
-    ports:
-      - "${ELASTIC_PORT}:9200"
-
-  kibana:
-    ports:
-      - "${KIBANA_PORT}:5601"
+#  elasticsearch:
+#    ports:
+#      - "${ELASTIC_PORT}:9200"
+#
+#  kibana:
+#    ports:
+#      - "${KIBANA_PORT}:5601"

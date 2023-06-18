@@ -2,12 +2,12 @@ version: '3.4'
 services:
   nginx:
     image: nginx:1.23.3-alpine
-    container_name: weather_app_nginx
+    container_name: bot_hub_app_nginx
     volumes:
       - .:/var/www/app
       - ./.docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
-      - weather_app_network
+      - bot_hub_network
     ports:
       - "${NGINX_EXTERNAL_PORT}:80"
 
@@ -16,16 +16,16 @@ services:
       context: .docker/php-fpm
       dockerfile: Dockerfile
       target: php-fpm-prod
-    container_name: weather_app_php-fpm
+    container_name: bot_hub_php-fpm
     working_dir: /var/www/app
     volumes:
       - .:/var/www/app
     networks:
-      - weather_app_network
+      - bot_hub_network
 
   db:
     image: postgres:15
-    container_name: weather_app_db
+    container_name: bot_hub_db
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -33,34 +33,34 @@ services:
     volumes:
       - ./.docker/postgresql_data:/var/lib/postgresql/data
     networks:
-      - weather_app_network
-
-  elasticsearch:
-    image: elasticsearch:8.7.0
-    container_name: weather_app_es
-    environment:
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-    volumes:
-      - ./.docker/elasticsearch/es_data:/usr/share/elasticsearch/data
-    networks:
-      - weather_app_network
-
-  kibana:
-    image: kibana:8.7.0
-    container_name: weather_app_kibana
-    networks:
-      - weather_app_network
-    depends_on:
-      - elasticsearch
-
-  logstash:
-    image: logstash:8.7.0
-    container_name: weather_app_logstash
-    depends_on:
-      - elasticsearch
-    networks:
-      - weather_app_network
+      - bot_hub_network
+#
+#  elasticsearch:
+#    image: elasticsearch:8.7.0
+#    container_name: bot_hub_es
+#    environment:
+#      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+#    volumes:
+#      - ./.docker/elasticsearch/es_data:/usr/share/elasticsearch/data
+#    networks:
+#      - bot_hub_network
+#
+#  kibana:
+#    image: kibana:8.7.0
+#    container_name: bot_hub_kibana
+#    networks:
+#      - bot_hub_network
+#    depends_on:
+#      - elasticsearch
+#
+#  logstash:
+#    image: logstash:8.7.0
+#    container_name: bot_hub_logstash
+#    depends_on:
+#      - elasticsearch
+#    networks:
+#      - bot_hub_network
 
 networks:
-  weather_app_network:
+  bot_hub_network:
     driver: bridge
