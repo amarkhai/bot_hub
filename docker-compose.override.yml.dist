@@ -1,0 +1,21 @@
+version: '3.4'
+services:
+  php-fpm:
+    build:
+      target: php-fpm-dev
+    environment:
+      PHP_IDE_CONFIG: ${PHP_IDE_CONFIG}
+      XDEBUG_MODE: ${XDEBUG_MODE}
+      XDEBUG_CONFIG: ${XDEBUG_CONFIG}
+
+  db:
+    ports:
+      - "${DB_EXTERNAL_PORT}:5432"
+
+  elasticsearch:
+    ports:
+      - "${ELASTIC_PORT}:9200"
+
+  kibana:
+    ports:
+      - "${KIBANA_PORT}:5601"
