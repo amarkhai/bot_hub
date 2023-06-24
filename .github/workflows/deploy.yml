@@ -1,0 +1,41 @@
+name: Deploy
+on:
+  pull_request:
+    branches: [ "master" ]
+    types:
+      - closed
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    # only if PR was merged
+    if: github.event.pull_request.merged == true
+    environment: production
+    env:
+      DIR: $(date +%Y%m%d_%H%M%S)
+    steps:
+      - name: Generate release datetime
+        id: datetime
+        run: echo "::set-output name=datetime::$(date +'%Y%m%d_%H%M%S')"
+      - name: Configure SSH
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          echo "${{ secrets.PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ vars.SERVER_NAME }} > ~/.ssh/known_hosts
+      - name: Cloning the project
+        run: ssh ${{ secrets.DEPLOY_USER }}@${{ vars.SERVER_NAME }} "cd ${{secrets.WORKING_DIR }} &&
+          git clone git@github.com:amarkhai/inventory_it.git ${{ steps.datetime.outputs.datetime }} &&
+          sudo chown www-data:www-data ${{ steps.datetime.outputs.datetime }} -R &&
+          cd ${{ steps.datetime.outputs.datetime }} &&
+          sh deploy.sh ${{ vars.SERVER_NAME }} ${{secrets.DB_DRIVER }} ${{secrets.DB_USER }} ${{secrets.DB_PASSWORD }} ${{secrets.DB_NAME }} ${{secrets.DB_HOST }} ${{secrets.DB_PORT }} ${{secrets.DB_DSN }} ${{secrets.JWT_TOKEN_EXPIRATION_TIME }} ${{secrets.JWT_SECRET }}
+          rm -rf ${{secrets.WORKING_DIR }}/${{ steps.datetime.outputs.datetime }}/var/log &&
+          sudo rm -Rf ${{secrets.WORKING_DIR }}/${{ steps.datetime.outputs.datetime }}/logs &&
+          sudo ln -s ${{secrets.WORKING_DIR }}/shared/logs ${{secrets.WORKING_DIR }}/${{ steps.datetime.outputs.datetime }}/logs &&
+          ( [ ! -d ${{secrets.WORKING_DIR }}/current ] || mv -Tf ${{secrets.WORKING_DIR }}/current ${{secrets.WORKING_DIR }}/previous ) &&
+          ln -s ${{secrets.WORKING_DIR }}/${{ steps.datetime.outputs.datetime }} ${{secrets.WORKING_DIR }}/current"
+      - name: cleanup
+        run: rm -rf ~/.ssh
+
+

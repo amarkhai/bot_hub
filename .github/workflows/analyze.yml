@@ -1,0 +1,54 @@
+name: Analyze
+on:
+  pull_request:
+    branches: [ "master" ]
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.2']
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    name: Analyzing for PHP ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: ${{ matrix.php }}
+      - name: Report PHP version
+        run: php -v
+      - name: Security checker
+        uses: symfonycorp/security-checker-action@v4
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      - name: Copy env
+        run: cp .env.github .env && cp .env.github .env.testing
+      - name: Code Sniffer
+        run: vendor/bin/phpcs
+      - name: Psalm
+        run: vendor/bin/psalm
+      - name: PHPStan
+        run: vendor/bin/phpstan
+      - name: Run migrations
+        run: vendor/bin/doctrine-migrations migrations:migrate
+      - name: Run test suite
+        run: vendor/bin/phpunit
