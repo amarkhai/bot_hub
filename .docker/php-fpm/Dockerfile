@@ -28,5 +28,6 @@ RUN apt-get update && apt-get install -y \
 # Clear cache to reduce the size of the image
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure zip \
-    docker-php-ext-install pdo_pgsql mbstring zip
+    && docker-php-ext-install pdo_pgsql mbstring zip \
+    && rm -rf /tmp/pear
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
